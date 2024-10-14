@@ -6,7 +6,7 @@ const About = () => {
 			<h1>About Attendance Ai</h1>
 			<p>
 				This software is built by Gaurav Saini under the guidance of Mr. Manish
-				Dubey. It leverages advanced AI technology to monitor the attendance of
+				Dubey Sir. It leverages advanced AI technology to monitor the attendance of
 				students efficiently and accurately.
 			</p>
 			<p>
