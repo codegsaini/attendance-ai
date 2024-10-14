@@ -1,0 +1,34 @@
+.container {
+	width: 100%;
+	display: flex;
+	flex-direction: column;
+    padding: 10px 0;
+    nav {
+        align-self: center;
+        border-radius: 50px;
+        background-color: #000000;
+        box-shadow: 0 10px 30px -11px #00000055;
+        ul {
+            width: 100%;
+            list-style-type: none;
+            display: flex;
+            column-gap: 20px;
+            padding: 2px;
+        }
+        li {
+            color: #ffffff;
+            padding: 10px 20px;
+            cursor: pointer;
+            &:hover {
+                background-color: #ffffff55;
+                border-radius: 40px;
+            }
+        }
+        li:nth-child(1) {
+            background-color: #ffffff;
+            border-radius: 40px;
+            color: #000000;
+            font-weight: bold;
+        }
+    }
+}
