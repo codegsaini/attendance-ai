@@ -1,7 +1,7 @@
 import { NavLink } from "react-router-dom";
 import style from "./style.module.scss";
 
-const TopBar = () => {
+const TopBar = ({setShowNewCameraForm}) => {
 	return (
 		<div className={style["container"]}>
 			<nav>
@@ -9,6 +9,7 @@ const TopBar = () => {
 					<NavItem to={"/cameras"} title={"Cameras"} />
 					<NavItem to={"/management"} title={"Management"} />
 					<NavItem to={"/about"} title={"About"} />
+					<button onClick={() => setShowNewCameraForm(true)}>Add Camera</button>
 				</ul>
 			</nav>
 		</div>

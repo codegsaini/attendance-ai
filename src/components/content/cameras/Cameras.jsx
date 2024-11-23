@@ -7,31 +7,28 @@ import CorruptFrame from "../../../assets/corrupt_frame.jpg";
 import Refresh from "../../../assets/loading-arrow.png";
 import Delete from "../../../assets/remove.png";
 import Loading from "../../../assets/loading.jpg";
+import AddCamera from "../../../assets/add-camera.png";
 
 const API_BASE_URL = "http://localhost:7000";
-
-const CAMERA_TYPE_USB = "usb";
-const CAMERA_TYPE_HTTPS = "https";
-const CAMERA_TYPE_RSTP = "rstp";
-const CAMERA_TYPE_GUID = "guid";
 
 const socket = io(API_BASE_URL, { reconnectionAttempts: 10 });
 
 const ERROR_CAMERA_NOT_FOUND = 0;
-const ERROR_NO_VIDEO = 1;
+// const ERROR_NO_VIDEO = 1;
 const ERROR_CORRUPT_FRAME = 2;
 const ERROR_ENCODING_FAILED = 3;
 
-const Cameras = () => {
+const Cameras = ({showNewCameraForm, setShowNewCameraForm}) => {
 	const [cameraList, setCameraList] = useState([]);
 	const [socketConnected, setSocketConnected] = useState(false);
 	const [feed, setFeed] = useState(null);
     const [feedError, setFeedError] = useState(null);
-    const [refreshing, setRefreshing] = useState(null);
+	const [refreshing, setRefreshing] = useState(null);
 
 	const onAddNewCamera = (cameraObj) => {
 		socket.emit("start_stream", cameraObj.cameraType, cameraObj.cameraSource);
 		setCameraList((prev) => [...prev, cameraObj]);
+		setShowNewCameraForm(false);
 	};
 
 	const connectCallback = () => {
@@ -95,26 +92,41 @@ const Cameras = () => {
 			socket.off("disconnect", disconnectCallback);
 		};
 	}, []);
+	
 
 	return (
 		<div className={style["container"]}>
+			{
+				showNewCameraForm &&
+				<NewCameraForm onSubmit={onAddNewCamera} setShowNewCameraForm={setShowNewCameraForm} />
+			}
 			<div className={style["content"]}>
-				<NewCameraForm onSubmit={onAddNewCamera} />
-				<div className={style["camera-container"]}>
-					{cameraList.map((camera, index) => (
-						<CameraCard
-							key={index}
-							error={feedError ? feedError[camera.cameraSource] : undefined}
-							feed={feed ? feed[camera.cameraSource] : undefined}
-							camera={camera}
-							onRefreshClick={() =>
-								onRefreshClick(camera.cameraType, camera.cameraSource)
-							}
-                            onDelete={() => onDelete(camera.cameraType, camera.cameraSource)}
-                            refreshing={refreshing ? refreshing[camera.cameraSource]: false}
-						/>
-					))}
-				</div>
+				{
+					cameraList.length < 1 &&
+					<div className={style['no-camera-message-container']}>
+						<img src={AddCamera} alt={"Add Camera Icon"}/>
+						<p>No camera found</p>
+						<p>Click on <button onClick={() => setShowNewCameraForm(true)}>Add Camera</button> button</p>
+					</div>
+				}
+				{
+					cameraList.length > 0 &&
+					<div className={style["camera-container"]}>
+						{cameraList.map((camera, index) => (
+							<CameraCard
+								key={index}
+								error={feedError ? feedError[camera.cameraSource] : undefined}
+								feed={feed ? feed[camera.cameraSource] : undefined}
+								camera={camera}
+								onRefreshClick={() =>
+									onRefreshClick(camera.cameraType, camera.cameraSource)
+								}
+								onDelete={() => onDelete(camera.cameraType, camera.cameraSource)}
+								refreshing={refreshing ? refreshing[camera.cameraSource]: false}
+							/>
+						))}
+					</div>
+				}
 			</div>
 		</div>
 	);
@@ -167,145 +179,102 @@ const CameraCard = ({ feed, error, camera, onRefreshClick, onDelete, refreshing 
 	);
 };
 
-const usbCameras = [0, 1, 2, 3, 4, 5];
-
-const NewCameraForm = ({ onSubmit }) => {
+const NewCameraForm = ({ onSubmit, setShowNewCameraForm }) => {
 	const [name, setName] = useState("");
 	const [camera, setCamera] = useState("");
-	const [cameraType, setCameraType] = useState("");
 	const [room, setRoom] = useState("");
 	const [_class, set_Class] = useState("");
 	const [error, setError] = useState(null);
 
 	const onAddNewCamera = () => {
-		if (name.trim() == "") return setError("Name empty");
-		if (room.trim() == "") return setError("Room number empty");
-		if (cameraType.trim() == "") return setError("Camera type invalid");
-		if (camera.trim() == "") return setError("Camera source empty");
-		if (_class.trim() == "") return setError("Class empty");
+		if (name.trim() == "") return setError("Please provide name of camera");
+		if (room.trim() == "") return setError("Please provide room number");
+		if (camera.trim() == "") return setError("Please provide Camera URL");
+		if (_class.trim() == "") return setError("Please provide class/section");
 		const data = {
 			name: name,
 			cameraSource: camera,
-			cameraType: cameraType,
 			room: room,
 			_class: _class,
 		};
         onSubmit(data);
         setName("");
         setCamera("");
-        setCameraType("");
         setRoom("");
         set_Class("");
     };
-    
-    useEffect(() => {
-        setCamera("");
-    }, [cameraType])
-
-	const cameraTypes = [
-		{
-			value: CAMERA_TYPE_USB,
-			label: "USB Camera",
-		},
-		{
-			value: CAMERA_TYPE_HTTPS,
-			label: "HTTPS",
-		},
-		{
-			value: CAMERA_TYPE_RSTP,
-			label: "RSTP",
-		},
-		{
-			value: CAMERA_TYPE_GUID,
-			label: "GUID",
-		},
-	];
 
 	return (
-		<div className={style["new-camera-form"]}>
-			{error && (
-				<div className={style["error-div"]}>
-					<div className={style["error-card"]}>
-						<p>{error}</p>
-						<button onClick={() => setError(null)}>Ok</button>
+		<div className={style['new-camera-form-container']}>
+			<div className={style["new-camera-form"]}>
+				{error && (
+					<div className={style["error-div"]}>
+						<div className={style["error-card"]}>
+							<p>{error}</p>
+							<button onClick={() => setError(null)}>Ok</button>
+						</div>
 					</div>
-				</div>
-			)}
-			<p>Add New Camera</p>
-			<div className={style["form-container"]}>
-				<Input
-					value={name}
-					onValueChange={(e) => setName(e.target.value)}
-					label={"Name"}
-				/>
-				<Input
-					value={room}
-					onValueChange={(e) => setRoom(e.target.value)}
-					label={"Room"}
-				/>
-
-				<SelectInput
-					value={cameraType}
-					onValueChange={(e) => setCameraType(e.target.value)}
-					label={"Camera Type"}
-					items={cameraTypes}
-				/>
-
-				{cameraType === CAMERA_TYPE_USB && (
-					<SelectInput
-						value={camera}
-						onValueChange={(e) => setCamera(e.target.value)}
-						label={"Camera"}
-						items={usbCameras.map((camera) => ({
-							value: camera,
-							label: `Camera-${camera}`,
-						}))}
-					/>
 				)}
-				{cameraType !== CAMERA_TYPE_USB && (
+				<p className={style['new-camera-close-button']} onClick={() => setShowNewCameraForm(false)}>×</p>
+				<p>Add New Camera</p>
+				<div className={style["form-container"]}>
+					<Input
+						value={name}
+						onValueChange={(e) => setName(e.target.value)}
+						label={"Name"}
+						placeholder={"eg. Cyber security attendance cam"}
+					/>
+					<Input
+						value={room}
+						onValueChange={(e) => setRoom(e.target.value)}
+						label={"Room"}
+						placeholder={"Room number(eg. 2208)"}
+					/>
 					<Input
 						value={camera}
 						onValueChange={(e) => setCamera(e.target.value)}
 						label={"Url"}
+						placeholder={"http:// or RTSP://"}
 					/>
-				)}
-				<Input
-					value={_class}
-					onValueChange={(e) => set_Class(e.target.value)}
-					label={"Class"}
-				/>
-				<button onClick={onAddNewCamera}>Submit</button>
+					<Input
+						value={_class}
+						onValueChange={(e) => set_Class(e.target.value)}
+						label={"Class"}
+						placeholder={"Class (eg. 21/CY)"}
+					/>
+					<button onClick={onAddNewCamera}>Submit</button>
+				</div>
 			</div>
 		</div>
 	);
 };
 
-const Input = ({ value, onValueChange, label }) => {
+const Input = ({ value, onValueChange, label, placeholder }) => {
 	return (
 		<div className={style["input-container"]}>
 			<p>{label}</p>
-			<input value={value} onChange={onValueChange} type="text" />
+			<input value={value} placeholder={placeholder} onChange={onValueChange} type="text" />
 		</div>
 	);
 };
 
-const SelectInput = ({ value, onValueChange, label, items = [] }) => {
-	return (
-		<div className={style["input-container"]}>
-			<p>{label}</p>
-			<select value={value} onChange={onValueChange}>
-				<option value={""}></option>
-				{items &&
-					items.map((item, index) => {
-						return (
-							<option key={index} value={item.value}>
-								{item.label}
-							</option>
-						);
-					})}
-			</select>
-		</div>
-	);
-};
+// const SelectInput = ({ value, onValueChange, label, items = [] }) => {
+// 	return (
+// 		<div className={style["input-container"]}>
+// 			<p>{label}</p>
+// 			<select value={value} onChange={onValueChange}>
+// 				<option value={""}></option>
+// 				{items &&
+// 					items.map((item, index) => {
+// 						return (
+// 							<option key={index} value={item.value}>
+// 								{item.label}
+// 							</option>
+// 						);
+// 					})}
+// 			</select>
+// 		</div>
+// 	);
+// };
 
 export default Cameras;
