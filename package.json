@@ -1,12 +1,12 @@
 {
 	"name": "attendance-ai",
 	"private": true,
-	"version": "0.0.0",
+	"version": "1.18.0",
 	"type": "module",
     "author": "Gaurav Saini",
 	"scripts": {
 		"dev": "vite",
-		"build": "vite build && electron-builder -wl",
+		"build": "vite build && electron-builder -p never -w",
 		"lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
 		"preview": "vite preview"
 	},

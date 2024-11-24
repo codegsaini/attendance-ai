@@ -3,7 +3,8 @@
   "$schema": "https://raw.githubusercontent.com/electron-userland/electron-builder/master/packages/app-builder-lib/scheme.json",
   "appId": "gaurav.poornima.attendance-ai",
   "asar": true,
-  "productName": "Attendance Ai",
+  "productName": "AttendanceAi",
+  "copyright": "Copyright © 2025 Gaurav Saini",
   "directories": {
     "output": "release/${version}"
   },
@@ -26,18 +27,24 @@
         ]
       }
     ],
-    "artifactName": "${productName}-Windows-${version}-Setup.${ext}"
+    "icon": "dist/icon.ico",
+    "artifactName": "${productName}-Setup.${ext}"
   },
   "nsis": {
     "oneClick": false,
     "perMachine": false,
     "allowToChangeInstallationDirectory": true,
-    "deleteAppDataOnUninstall": false
+    "deleteAppDataOnUninstall": false,
+    "installerIcon": "dist/icon.ico",
+    "uninstallerIcon": "dist/icon.ico",
+    "installerHeaderIcon": "dist/icon.ico",
+    "createDesktopShortcut": true,
+    "createStartMenuShortcut": true
   },
   "linux": {
     "target": [
       "AppImage"
     ],
-    "artifactName": "${productName}-Linux-${version}.${ext}"
+    "artifactName": "${productName}-Linux-${buildVersion}.${ext}"
   }
 }

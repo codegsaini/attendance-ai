@@ -29,10 +29,10 @@ let win: BrowserWindow | null
 function createWindow() {
     win = new BrowserWindow({
       title:"AttendanceAi",
-    // icon: path.join(process.env.VITE_PUBLIC, 'electron-vite.svg'),
-    webPreferences: {
-      preload: path.join(__dirname, 'preload.mjs'),
-    },
+      icon: path.join(process.env.VITE_PUBLIC as string, 'logo192.png'),
+      webPreferences: {
+        preload: path.join(__dirname, 'preload.mjs'),
+      },
   })
 
   // Test active push message to Renderer-process.

@@ -8,15 +8,16 @@ import Refresh from "../../../assets/loading-arrow.png";
 import Delete from "../../../assets/remove.png";
 import Loading from "../../../assets/loading.jpg";
 import AddCamera from "../../../assets/add-camera.png";
+import CameraPreview from "../../camera_preview/CameraPreview";
 
-const API_BASE_URL = "http://localhost:7000";
+const API_BASE_URL = "https://attendance-ai-backend-38406260586.asia-south2.run.app";
 
 const socket = io(API_BASE_URL, { reconnectionAttempts: 10 });
 
-const ERROR_CAMERA_NOT_FOUND = 0;
+export const ERROR_CAMERA_NOT_FOUND = 0;
 // const ERROR_NO_VIDEO = 1;
-const ERROR_CORRUPT_FRAME = 2;
-const ERROR_ENCODING_FAILED = 3;
+export const ERROR_CORRUPT_FRAME = 2;
+export const ERROR_ENCODING_FAILED = 3;
 
 const Cameras = ({showNewCameraForm, setShowNewCameraForm}) => {
 	const [cameraList, setCameraList] = useState([]);
@@ -24,10 +25,12 @@ const Cameras = ({showNewCameraForm, setShowNewCameraForm}) => {
 	const [feed, setFeed] = useState(null);
     const [feedError, setFeedError] = useState(null);
 	const [refreshing, setRefreshing] = useState(null);
+	const [previewCamera, setPreviewCamera] = useState(null);
 
 	const onAddNewCamera = (cameraObj) => {
 		socket.emit("start_stream", cameraObj.cameraType, cameraObj.cameraSource);
 		setCameraList((prev) => [...prev, cameraObj]);
+		setRefreshing((prev) => ({...prev, [cameraObj.cameraSource]: true}))
 		setShowNewCameraForm(false);
 	};
 
@@ -49,6 +52,7 @@ const Cameras = ({showNewCameraForm, setShowNewCameraForm}) => {
 				...prev,
 				[data.source]: URL.createObjectURL(blob),
 			}));
+			setRefreshing((prev) => ({...prev, [data.source]: false}))
 			setFeedError((prev) => ({ ...prev, [data.source]: undefined }));
 			setTimeout(() => {
 				URL.revokeObjectURL(blob);
@@ -100,6 +104,17 @@ const Cameras = ({showNewCameraForm, setShowNewCameraForm}) => {
 				showNewCameraForm &&
 				<NewCameraForm onSubmit={onAddNewCamera} setShowNewCameraForm={setShowNewCameraForm} />
 			}
+			{
+				previewCamera &&
+				<CameraPreview
+					previewCamera={previewCamera}
+					feed={feed ? feed[previewCamera.cameraSource] : undefined}
+					error={feedError ? feedError[previewCamera.cameraSource] : undefined}
+					refreshing={refreshing ? refreshing[previewCamera.cameraSource] : false}
+					onDismissRequest={() => setPreviewCamera(null)}
+					onRefreshRequest={() => onRefreshClick(previewCamera.cameraType, previewCamera.cameraSource)}
+				/>
+			}
 			<div className={style["content"]}>
 				{
 					cameraList.length < 1 &&
@@ -115,6 +130,7 @@ const Cameras = ({showNewCameraForm, setShowNewCameraForm}) => {
 						{cameraList.map((camera, index) => (
 							<CameraCard
 								key={index}
+								onClick={() => setPreviewCamera(camera)}
 								error={feedError ? feedError[camera.cameraSource] : undefined}
 								feed={feed ? feed[camera.cameraSource] : undefined}
 								camera={camera}
@@ -132,7 +148,7 @@ const Cameras = ({showNewCameraForm, setShowNewCameraForm}) => {
 	);
 };
 
-const CameraCard = ({ feed, error, camera, onRefreshClick, onDelete, refreshing }) => {
+const CameraCard = ({ feed, error, camera, onRefreshClick, onDelete, refreshing, onClick }) => {
 	let errorImage = NoVideo;
 	switch (error) {
 		case ERROR_CAMERA_NOT_FOUND:
@@ -149,7 +165,7 @@ const CameraCard = ({ feed, error, camera, onRefreshClick, onDelete, refreshing 
 	}
 
 	return (
-		<div className={style["camera-card"]}>
+		<div className={style["camera-card"]} onClick={onClick}>
 			{!refreshing && feed != undefined && (
 				<img className={style["feed-img"]} src={feed} alt={camera.name} />
 			)}
@@ -168,8 +184,14 @@ const CameraCard = ({ feed, error, camera, onRefreshClick, onDelete, refreshing 
 				/>
 			)}
 			<div className={style["action-container"]}>
-				<img onClick={onRefreshClick} src={Refresh} />
-				<img onClick={onDelete} src={Delete} />
+				<img onClick={(e) => {
+					e.stopPropagation();
+					onRefreshClick();
+				}} src={Refresh} />
+				<img onClick={(e) => {
+					e.stopPropagation();
+					onDelete();
+				}} src={Delete} />
 			</div>
 			<div className={style["info-container"]}>
 				<p>{camera.name}</p>

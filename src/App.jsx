@@ -14,9 +14,9 @@ const App = () => {
 			<TopBar setShowNewCameraForm={setShowNewCameraForm} />
 			<Routes>
 				<Route path="/cameras" index element={<Cameras showNewCameraForm={showNewCameraForm} setShowNewCameraForm={setShowNewCameraForm} />} />
-				<Route path="/management" index element={<Cameras showNewCameraForm={showNewCameraForm} setShowNewCameraForm={setShowNewCameraForm} />} />
-				<Route path="/about" index element={<About />} />
-				<Route path="*" index element={<Navigate to={"/cameras"} />} />
+				<Route path="/management" element={<Cameras showNewCameraForm={showNewCameraForm} setShowNewCameraForm={setShowNewCameraForm} />} />
+				<Route path="/about" element={<About />} />
+				<Route path="*" element={<Navigate to={"/cameras"} />} />
 			</Routes>
 		</div>
 	);
